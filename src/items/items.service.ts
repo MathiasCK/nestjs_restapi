@@ -1,41 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { Item } from './items.types';
 import { ItemDto } from './items.dto';
 
 @Injectable()
 export class ItemsService {
-  private readonly items: Item[] = [
-    {
-      id: '1111111',
-      name: 'Item 1',
-      description: 'Description 1',
-      qty: 1,
-    },
-    {
-      id: '2222222',
-      name: 'Item 2',
-      description: 'Description 2',
-      qty: 2,
-    },
-  ];
+  constructor(@InjectModel('Item') private readonly itemModel: Model<Item>) {}
 
-  findall(): Item[] {
-    return this.items;
+  async findall(): Promise<Item[]> {
+    return await this.itemModel.find();
   }
 
-  findOne(id: string): Item {
-    return this.items.find((item) => item.id === id);
+  async findOne(id: string): Promise<Item> {
+    return await this.itemModel.findOne({ _id: id });
   }
 
-  create(item: ItemDto): string {
-    return `Creating item: ${item.name}. Description: ${item.description}. Qty: ${item.qty}`;
+  async create(item: ItemDto): Promise<Item> {
+    const newItem = new this.itemModel(item);
+    return await newItem.save();
   }
 
-  update(item: ItemDto, id: string): string {
-    return `Update id: ${id} - Name: ${item.name}`;
+  async update(item: ItemDto, id: string): Promise<Item> {
+    return await this.itemModel.findByIdAndUpdate(id, item, { new: true });
   }
 
-  delete(id: string): string {
-    return `Item id: ${id} deleted`;
+  async delete(id: string): Promise<Item> {
+    return await this.itemModel.findByIdAndDelete(id);
   }
 }
